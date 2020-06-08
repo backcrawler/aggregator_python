@@ -1,0 +1,47 @@
+{% extends "news/base.html" %}
+
+{% block header %}
+    <li>
+    <a href="{% url 'news:mainpage' %}">All</a>
+        </li>
+    <li>
+    <a href="{% url 'news:webpage' %}">Web Dev</a>
+    </li>
+    <li>
+    <a href="{% url 'news:datasciencepage' %}">Data Science</a>
+    </li>
+{% endblock header %}
+
+{% block content %}
+    {% for post in post_list %}
+        <p><a href={{post.ref}}>{{post.title}}</a></p>
+    {% empty %}
+        <p>No posts here yet</p>
+    {% endfor %}
+
+
+    <div>
+        <ul class="pagination">
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %} %}"><a class="page-link" href="#" tabindex="-1">Previous</a></li>
+            {% for n in page_obj.paginator.page_range %}
+                {% if page_obj.number == n %}
+                    <li class="page-item active">
+                        <a class="page-link" href="{{request.path}}?page={{n}}">{{n}}<span class="sr-only">(current)</span></a>
+                    </li>
+                {% elif n > page_obj.number|add:-3 and n < page_obj.number|add:3 %}
+                    <li class="page-item">
+                        <a class="page-link" href="{{request.path}}?page={{n}}">{{n}}<span class="sr-only">(current)</span></a>
+                    </li>
+                {% endif %}
+            {% endfor %}
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}"><a class="page-link" href="#" tabindex="-1">Next</a></li>
+        </ul>
+    </div>
+
+    <form action="{% url 'news:userpost' %}" method='post'>
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button name="submit">Confirm</button>
+    </form>
+{% endblock content %}
+
