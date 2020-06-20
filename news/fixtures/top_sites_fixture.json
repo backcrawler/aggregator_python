@@ -1,0 +1,83 @@
+[
+{
+    "model": "news.site",
+    "pk": 1,
+    "fields": {
+        "name": "reddit_django",
+        "ref": "https://www.reddit.com/r/django/",
+        "active": true
+    }
+},
+{
+    "model": "news.site",
+    "pk": 2,
+    "fields": {
+        "name": "reddit_python",
+        "ref": "https://www.reddit.com/r/python/",
+        "active": true
+    }
+},
+{
+    "model": "news.site",
+    "pk": 3,
+    "fields": {
+        "name": "habr",
+        "ref": "https://habr.com/ru/hub/python/",
+        "active": true
+    }
+},
+{
+    "model": "news.site",
+    "pk": 4,
+    "fields": {
+        "name": "medium",
+        "ref": "https://medium.com/tag/python",
+        "active": true
+    }
+},
+{
+    "model": "news.site",
+    "pk": 5,
+    "fields": {
+        "name": "realpython",
+        "ref": "https://realpython.com/",
+        "active": true
+    }
+},
+{
+    "model": "news.site",
+    "pk": 6,
+    "fields": {
+        "name": "tproger",
+        "ref": "https://tproger.ru/tag/python/",
+        "active": true
+    }
+},
+{
+    "model": "news.site",
+    "pk": 7,
+    "fields": {
+        "name": "official_django",
+        "ref": "https://www.djangoproject.com/weblog/",
+        "active": true
+    }
+},
+{
+    "model": "news.site",
+    "pk": 8,
+    "fields": {
+        "name": "official_python",
+        "ref": "https://www.python.org/",
+        "active": true
+    }
+},
+{
+    "model": "news.site",
+    "pk": 9,
+    "fields": {
+        "name": "pypi",
+        "ref": "https://pypi.org/",
+        "active": true
+    }
+}
+]

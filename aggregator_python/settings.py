@@ -31,6 +31,8 @@ POSTGRES_USER = loaded_dict['DB_USER']
 POSTGRES_PASSWORD = loaded_dict['DB_PASSWORD']
 POSTGRES_HOST = loaded_dict['DB_HOST']
 POSTGRES_PORT = loaded_dict['DB_PORT']
+EMAIL_USER = loaded_dict['EMAIL_USER']
+EMAIL_PASSWORD = loaded_dict['EMAIL_PASSWORD']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -95,6 +97,15 @@ DATABASES = {
     }
 }
 
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
+#         'LOCATION': '127.0.0.1:11211',
+#         'OPTIONS': {
+#             'server_max_value_length': 1024 * 1024 * 2,
+#         }
+#     }
+# }
 
 # Password validation
 # https://docs.djangoproject.com/en/2.1/ref/settings/#auth-password-validators
@@ -133,3 +144,24 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/2.1/howto/static-files/
 
 STATIC_URL = '/static/'
+
+ADMINS = []
+
+if loaded_dict.get('MAIN_ADMIN_NAME') and loaded_dict.get('MAIN_ADMIN_MAIL'):
+    extra_tuple = (loaded_dict.get('MAIN_ADMIN_NAME'), loaded_dict.get('MAIN_ADMIN_MAIL'))
+    ADMINS.append(extra_tuple)
+
+# info for emails - getting notifications from parsers
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_USE_TLS = True
+EMAIL_PORT = 587
+EMAIL_HOST_USER = EMAIL_USER
+EMAIL_HOST_PASSWORD = EMAIL_PASSWORD
+
+CELERY_BROKER_URL = 'redis://localhost:6379'
+CELERY_RESULT_BACKEND = 'redis://localhost:6379'
+CELERY_ACCEPT_CONTENT = ['application/json',]
+CELERY_TASK_SERIALIZER = 'json'
+CELERY_RESULT_SERIALIZER = 'json'
+

@@ -22,7 +22,10 @@
 
     <div>
         <ul class="pagination">
-            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %} %}"><a class="page-link" href="#" tabindex="-1">Previous</a></li>
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %} %}">
+                <a class="page-link" href="{{request.path}}?page=1">First</a></li>
+            <li class="page-item {% if not page_obj.has_previous %}disabled{% endif %} %}">
+                <a class="page-link" href="{{request.path}}?page={{n}}" tabindex="-1">Previous</a></li>
             {% for n in page_obj.paginator.page_range %}
                 {% if page_obj.number == n %}
                     <li class="page-item active">
@@ -35,13 +38,18 @@
                 {% endif %}
             {% endfor %}
             <li class="page-item {% if not page_obj.has_next %}disabled{% endif %}"><a class="page-link" href="#" tabindex="-1">Next</a></li>
+            <li class="page-item {% if not page_obj.has_next %}disabled{% endif %} %}">
+                <a class="page-link" href="{{request.path}}?page={{page_obj.paginator.num_pages}}">Last</a></li>
         </ul>
     </div>
 
+    {% if user.is_authenticated %}
     <form action="{% url 'news:userpost' %}" method='post'>
         {% csrf_token %}
         {{ form.as_p }}
         <button name="submit">Confirm</button>
     </form>
+    {% endif %}
+
 {% endblock content %}
 

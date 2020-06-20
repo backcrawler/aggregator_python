@@ -4,7 +4,7 @@ from bs4 import BeautifulSoup
 from urllib.parse import urlparse, urlunparse, urljoin
 from datetime import datetime
 
-from .utils import append_slash
+from .utils import append_slash, ResponceCodeError
 
 heading = {'User-agent': 'my bot 0.9'}
 
@@ -12,6 +12,8 @@ heading = {'User-agent': 'my bot 0.9'}
 def get_soup(link):
     '''Basic function for bs4-like sources, reduces boilerplate'''
     r = requests.get(link, headers=heading)
+    if r.status_code != 200:
+        raise ResponceCodeError(r.status_code)
     content = r.content
     soup = BeautifulSoup(content, "html.parser")
     return soup
@@ -27,8 +29,8 @@ def get_base(link):
 def reddit_base(link):
     '''Basic parser for reddit-related links'''
     r = requests.get(urljoin(link, 'new/.json'), headers=heading)
-    if r.status_code == 429:
-        ...  # TODO: email to admin
+    if r.status_code != 200:
+        raise ResponceCodeError(r.status_code)
     json_obj = json.loads(r.content)
     children = json_obj['data']['children']
     base = get_base(link)
@@ -139,12 +141,14 @@ def tproger_parser(link):
 def realpython_parser(link):
     '''Parses realpython posts'''
     soup = get_soup(link)
-    cards = soup.findAll('div', class_='card-body m-0 p-0 mt-2')
+    cards = soup.findAll('div', class_='card-body')
     base = get_base(link)
     posts = []
     for card in cards:
-        h2 = card.find('h2', _class='card-title h4 my-0 py-0')
+        h2 = card.find('h2')
         a = card.find('a', class_='')  # this gotta be the 1st link
+        if h2 is None:
+            break
         posts.append({'title': h2.text, 'ref': urljoin(base, a['href'])})
     if len(posts) > 20:
         posts = posts[:20]
@@ -157,8 +161,9 @@ def medium_parser(link):
     articles = soup.findAll('div', {'class': 'postArticle'})
     posts = []
     for article in articles:
-        a = article.find('a')
         h3 = article.find('h3', {'class': 'graf'})
+        readmore = article.find('div', {'class': 'postArticle-readMore'})
+        a = readmore.find('a')
         posts.append({'title': h3.text, 'ref': a['href']})
     if len(posts) > 20:
         posts = posts[:20]

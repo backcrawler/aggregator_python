@@ -15,3 +15,10 @@ def append_slash(url):
 def compose_name(name):
     '''Proper name, shown for users'''
     return name.replace('_', ' ').title()
+
+
+class ResponceCodeError(BaseException):
+    '''Used to signify an invalid responce code while parsing data from an external resource'''
+    def __init__(self, responce_code, *args, **kwargs):
+        self.code = responce_code
+        super().__init__(*args, **kwargs)

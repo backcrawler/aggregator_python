@@ -1,0 +1,30 @@
+[
+  {
+    "model": "news.post",
+    "pk": 1,
+    "fields": {
+        "title": "1st testing post", "ref": "www.google.com/utyhdfgtg", "created": "2020-06-10T11:16:34.351Z"
+    }
+  },
+  {
+    "model": "news.post",
+    "pk": 2,
+    "fields": {
+        "title": "2d testing post", "ref": "www.google.com/fcdsfdf", "created": "2020-06-10T11:17:34.351Z"
+    }
+  },
+  {
+    "model": "news.post",
+    "pk": 3,
+    "fields": {
+        "title": "3d testing post", "ref": "www.reddit.com/ergregerg", "category":"web_dev", "created": "2020-06-10T11:18:34.351Z"
+    }
+  },
+  {
+    "model": "news.post",
+    "pk": 4,
+    "fields": {
+        "title": "4th testing post", "ref": "www.habr.ru/regregrg", "category":"data_science", "created": "2020-06-10T11:19:34.351Z"
+    }
+  }
+]

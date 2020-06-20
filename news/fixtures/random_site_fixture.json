@@ -1,0 +1,24 @@
+[
+  {
+    "model": "news.site",
+    "pk": 1,
+    "fields": {
+        "name": "habr", "ref": "habr.com", "active": true
+    }
+  },
+  {
+    "model": "news.site",
+    "pk": 2,
+    "fields": {
+        "name": "reddit_python", "ref": "reddit.com", "active": true
+    }
+  },
+  {
+    "model": "news.site",
+    "pk": 3,
+    "fields": {
+        "name": "medium", "ref": "medium.org", "active": true
+    }
+  }
+]
+

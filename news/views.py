@@ -14,12 +14,11 @@ class PostListView(ListView):
     model = Post
     http_method_names = ('get', 'head', 'options')
     allow_empty = True
-    paginate_by = 4
+    paginate_by = 10
     cat = None
 
     def get_queryset(self):
         print('COOKIES_IN_VIEW:', self.request.COOKIES)
-        print('SESSION:', self.request.session)
         if self.cat is not None:  # if self.cat is provided, showing all result for it
             queryset = Post.objects.filter(category=self.cat)
         else:
@@ -27,26 +26,27 @@ class PostListView(ListView):
                 cookies = self.request.COOKIES
                 categories = cookies.get('user_categories')
                 sites = cookies.get('user_sites')
-                cookies.get('user_categories')
                 if not (categories or sites):  # logged in, but no cookie yet
                     print('no correct cookie yet((')
                     queryset = Post.objects.all()
                 else:  # if required cookies are set
+                    print('POINT 2')
                     queryset = Post.objects.all()
                     if categories:
                         query = Q(category=None)
-                        for _, val in CATS:
+                        for val, _ in CATS:
                             if val in cookies['user_categories']:
                                 query.add(Q(category=val), Q.OR)
                         queryset = queryset.filter(query)
                     if sites:
                         query = Q()
-                        for _, val in SITES:
+                        for val, _ in SITES:
                             if val in cookies['user_sites']:
                                 print('Current val', val)
                                 query.add(Q(source__name=val), Q.OR)
                         queryset = queryset.filter(query)
             else:  # AnonymousUser, showing all results
+                print('POINT 3')
                 queryset = Post.objects.all()
         return queryset.order_by('-created')
 
@@ -60,8 +60,7 @@ class PostListView(ListView):
                                                 'sites': listify(sites_string)})
         else:  # if these cookies have not been set yet
             context['form'] = PrefCatForm()
-        print('FORM:', context['form'])
-        print('POST LIST:', context['post_list'])
+        #print('POST LIST:', context['post_list'])
         return context
 
 
