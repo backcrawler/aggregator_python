@@ -28,7 +28,7 @@ def get_base(link):
 
 def reddit_base(link):
     '''Basic parser for reddit-related links'''
-    r = requests.get(urljoin(link, 'new/.json'), headers=heading)
+    r = requests.get(urljoin(link, '.json'), headers=heading)
     if r.status_code != 200:
         raise ResponceCodeError(r.status_code)
     json_obj = json.loads(r.content)
@@ -36,6 +36,8 @@ def reddit_base(link):
     base = get_base(link)
     posts = []
     for i in range(len(children)):
+        if children[i]['data']['score'] < 4:
+            continue
         instance = dict()
         instance['title'] = children[i]['data']['title']
         instance['ref'] = urljoin(base, children[i]['data']['permalink'])
@@ -55,7 +57,7 @@ def reddit_datascience_parser(link):
     '''Parses r/datascience section of Reddit'''
     posts = reddit_base(link)
     for post in posts:
-        post['category'] = 'Data Science'
+        post['category'] = 'data_science'
     return posts
 
 
@@ -63,7 +65,7 @@ def reddit_django_parser(link):
     '''Parses r/django section of Reddit'''
     posts = reddit_base(link)
     for post in posts:
-        post['category'] = 'Django'
+        post['category'] = 'web_dev'
     return posts
 
 
@@ -119,7 +121,7 @@ def official_django_parser(link):
     posts = []
     for h2 in h2_s:
         a = h2.find('a')
-        posts.append({'title': a.text, 'ref': a['href'], 'category': 'Django'})
+        posts.append({'title': a.text, 'ref': a['href'], 'category': 'web_dev'})
     return posts
 
 

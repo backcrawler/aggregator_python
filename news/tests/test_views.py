@@ -19,5 +19,5 @@ class MainpageTests(TestCase):
         d1 = {'user_categories': ['wev_dev']}
         response = self.send_cookies(d1)
         self.assertEqual(response.status_code, 302)
-        #auth
-        #send again
+        # custom auth here
+        # send again
