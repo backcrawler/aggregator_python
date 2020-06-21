@@ -7,6 +7,9 @@ from datetime import datetime
 from .utils import append_slash, ResponceCodeError
 
 heading = {'User-agent': 'my bot 0.9'}
+web_dev_set = {'flask', 'django', 'разработка веб-сайтов', 'fastapi', 'aiohttp', 'веб-', 'web ', 'web-dev'}
+data_science_set = {'машинное обучение', 'искусственный интеллект',
+                    'data science', 'pandas', 'machine learning', 'data-science'}
 
 
 def get_soup(link):
@@ -36,7 +39,7 @@ def reddit_base(link):
     base = get_base(link)
     posts = []
     for i in range(len(children)):
-        if children[i]['data']['score'] < 4:
+        if children[i]['data']['score'] < 5:
             continue
         instance = dict()
         instance['title'] = children[i]['data']['title']
@@ -72,10 +75,27 @@ def reddit_django_parser(link):
 def habr_parser(link):
     '''Parses Python section on Habr'''
     soup = get_soup(link)
-    posts_list = soup.find('div', class_="posts_list")
-    refs = posts_list.findAll('a', class_="post__title_link")
-    base = get_base(link)
-    posts = [{'title': elem.text, 'ref': urljoin(base, elem['href'])} for elem in refs]
+    articles = soup.findAll('article', class_="post_preview")
+    posts = []
+    for article in articles:
+        ref = article.find('a', class_="post__title_link")
+        hub_list = article.find('ul', class_="post__hubs")
+        cat = None
+        for hub in hub_list.findAll('li'):
+            a = hub.find('a')
+            if a.text.lower() in web_dev_set:
+                cat = 'web_dev'
+                break
+            if a.text.lower() in data_science_set:
+                cat = 'data_science'
+                break
+        base = get_base(link)
+        instance = {'title': ref.text, 'ref': urljoin(base, ref['href']), 'category': cat}
+        posts.append(instance)
+    # posts_list = soup.find('div', class_="posts_list")
+    # refs = posts_list.findAll('a', class_="post__title_link")
+    # base = get_base(link)
+    # posts = [{'title': elem.text, 'ref': urljoin(base, elem['href'])} for elem in refs]
     return posts
 
 
@@ -101,11 +121,10 @@ def official_python_parser(link):
     soup = get_soup(link)
     latest_news = soup.find('div', {"class": ["blog-widget", "medium-widget"]})
     li_s = latest_news.findAll('li')
-    base = get_base(link)
     posts = []
     for elem in li_s:
         a = elem.find('a')
-        posts.append({'title': urljoin(base, a.text), 'ref': a['href']})
+        posts.append({'title': a.text, 'ref': a['href']})
     return posts
 
 
@@ -132,9 +151,19 @@ def tproger_parser(link):
     articles = main_columns.findAll('article', {'class': ['box', 'item', 'post']})
     posts = []
     for article in articles:
-        h2 = article.find('h2', class_='entry-title')
+        h2_title = article.find('h2', class_='entry-title').text
         a = article.find('a', class_='article-link')
-        posts.append({'title': h2.text, 'ref': a['href']})
+        cat = None
+        for tag in web_dev_set:
+            if tag in h2_title.lower():
+                cat = 'web_dev'
+                break
+        if not cat:
+            for tag in data_science_set:
+                if tag in h2_title.lower():
+                    cat = 'data_science'
+                    break
+        posts.append({'title': h2_title, 'ref': a['href'], 'category': cat})
     if len(posts) > 20:
         posts = posts[:20]
     return posts
@@ -151,7 +180,17 @@ def realpython_parser(link):
         a = card.find('a', class_='')  # this gotta be the 1st link
         if h2 is None:
             break
-        posts.append({'title': h2.text, 'ref': urljoin(base, a['href'])})
+        cat = None
+        p = card.find('p')
+        if p:
+            for a_tag in p.findAll('a'):
+                if a_tag.text in web_dev_set:
+                    cat = 'web_dev'
+                    break
+                if a_tag.text in data_science_set:
+                    cat = 'data_science'
+                    break
+        posts.append({'title': h2.text, 'ref': urljoin(base, a['href']), 'category': cat})
     if len(posts) > 20:
         posts = posts[:20]
     return posts
@@ -166,7 +205,17 @@ def medium_parser(link):
         h3 = article.find('h3', {'class': 'graf'})
         readmore = article.find('div', {'class': 'postArticle-readMore'})
         a = readmore.find('a')
-        posts.append({'title': h3.text, 'ref': a['href']})
+        cat = None
+        for tag in web_dev_set:
+            if tag in h3.text.lower():
+                cat = 'web_dev'
+                break
+        if not cat:
+            for tag in data_science_set:
+                if tag in h3.text.lower():
+                    cat = 'data_science'
+                    break
+        posts.append({'title': h3.text, 'ref': a['href'], 'category': cat})
     if len(posts) > 20:
         posts = posts[:20]
     return posts

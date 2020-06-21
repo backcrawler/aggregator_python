@@ -30,8 +30,10 @@ class BadEvent(models.Model):
         print(today_qs)
         if not today_qs.exists():  # if such error didn't occur for today, send info in email
             print('sending email...')
-            email_task(self).delay()
+            email_task.delay(self)
+        print('saving')
         super().save(*args, **kwargs)
+        print('saved!')
 
 
 class ExceptionEvent(BadEvent):
