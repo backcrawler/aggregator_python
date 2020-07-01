@@ -1,15 +1,17 @@
 from django.db import models
+from django.core.mail import mail_admins, send_mail
 
 from .utils import ResponceCodeError
 from .managers import ActiveManager
-from .tasks import email_task
 
 import sys
 import importlib
 import traceback
 from urllib.parse import urlparse
 
-m = importlib.import_module('news.parsers')  # gathering all parsers' names into one dict
+DEFAULT_PIC_ID = 1
+
+m = importlib.import_module('news.parsers')
 parsers = {}
 for key, val in vars(m).items():
     if key.endswith('_parser'):
@@ -25,15 +27,31 @@ class BadEvent(models.Model):
     class Meta:
         abstract = True
 
+    def notify_admins(self):
+        '''Send notification info about errors to admins'''
+        subject = "Aggregator: Error occured"
+        err_txt = self.__dict__.get('exc_text')
+        invalid_code = self.__dict__.get('resp_code')
+        if err_txt:
+            start = f"Exception ({err_txt})"
+        elif invalid_code:
+            start = f"Bad response code ({invalid_code})"
+        else:
+            start = f"Unknown instance"
+        message = f"{start} occured on {self.resource} at {self.date_occured}."
+        # Sending:
+        print('gotta send')
+        mail_admins(subject=subject,
+                    message=message,
+                    fail_silently=False)
+
     def save(self, *args, **kwargs):
         today_qs = self.__class__.objects.filter(date_occured=self.date_occured, resource=self.resource)
         print(today_qs)
         if not today_qs.exists():  # if such error didn't occur for today, send info in email
             print('sending email...')
-            email_task.delay(self)
-        print('saving')
+            self.notify_admins()
         super().save(*args, **kwargs)
-        print('saved!')
 
 
 class ExceptionEvent(BadEvent):
@@ -71,23 +89,6 @@ class Post(models.Model):
     class Meta:
         ordering = ('-created', 'ref')
 
-    def save(self, *args, **kwargs):
-        #print('save method')
-        if self.source is None:
-            #print('Source is None...')
-            parsed_url = urlparse(self.ref)
-            source_field = parsed_url.netloc
-            #print('source field:', source_field)
-            try:
-                source_site = Site.objects.get(ref=source_field)  # finding out if Site with this ref exists
-            except Site.DoesNotExist:
-                #print('No source found')
-                self.source = None  # nothing changed here
-            else:
-                #print('got a source:', source_site)
-                self.source = source_site  # automatically set source
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return f'Post(ref: {self.ref}, id:{self.id})'
 
@@ -96,10 +97,11 @@ class Site(models.Model):
     '''Represent a "root"-resource where initial data is leached from; handles data fetching in methods'''
     name = models.CharField(max_length=128, unique=True)
     ref = models.CharField(max_length=128)
+    img = models.ForeignKey(to='Pic', on_delete=models.CASCADE, null=True, blank=True)
     active = models.BooleanField(default=True)
 
-    # objects = models.ActiveManager()  # TODO: decide on this
-    # old_manager = models.Manager()
+    objects = ActiveManager()
+    old_manager = models.Manager()
 
     def _handle_resource(self):
         res_name = self.name
@@ -126,3 +128,12 @@ class Site(models.Model):
 
     def __str__(self):
         return f'Site(name: {self.name}, id:{self.id})'
+
+
+class Pic(models.Model):
+    '''Represents logo picture for a site/post instance'''
+    tag = models.CharField(max_length=32)
+    image = models.ImageField(blank=True, null=True)
+
+    def __str__(self):
+        return f'Pic({self.tag})'

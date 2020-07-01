@@ -39,7 +39,7 @@ def reddit_base(link):
     base = get_base(link)
     posts = []
     for i in range(len(children)):
-        if children[i]['data']['score'] < 5:
+        if children[i]['data']['score'] < 20:
             continue
         instance = dict()
         instance['title'] = children[i]['data']['title']

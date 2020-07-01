@@ -1,5 +1,13 @@
 [
   {
+    "model": "news.pic",
+    "pk": 1,
+    "fields": {
+      "tag": "default_name",
+      "image": "1.png"
+    }
+  },
+  {
     "model": "news.site",
     "pk": 1,
     "fields": {

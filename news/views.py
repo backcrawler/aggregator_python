@@ -1,4 +1,4 @@
-from django.shortcuts import Http404, HttpResponseRedirect, reverse
+from django.shortcuts import Http404, HttpResponseRedirect, reverse, render
 from django.views.generic.list import ListView
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -9,7 +9,7 @@ from .utils import listify
 
 
 class PostListView(ListView):
-    '''shows all posts, category (cat) specifies the post type'''
+    '''Shows all posts, category (cat) specifies the post type'''
     template_name = "news/home.html"
     model = Post
     http_method_names = ('get', 'head', 'options')
@@ -23,47 +23,33 @@ class PostListView(ListView):
         else:
             if self.request.user.is_authenticated:  # user is logged in
                 cookies = self.request.COOKIES
-                categories = cookies.get('user_categories')
-                sites = cookies.get('user_sites')
-                if not (categories or sites):  # logged in, but no cookie yet
-                    queryset = Post.objects.all()
-                else:  # if required cookies are set
-                    queryset = Post.objects.all()
-                    if categories:
-                        query = Q(category=None)
-                        for val, _ in CATS:
-                            if val in cookies['user_categories']:
-                                query.add(Q(category=val), Q.OR)
-                        queryset = queryset.filter(query)
-                    if sites:
-                        query = Q()
-                        for val, _ in SITES:
-                            if val in cookies['user_sites']:
-                                query.add(Q(source__name=val), Q.OR)
-                        queryset = queryset.filter(query)
+                categories = cookies.get('user_categories', '')
+                sites = cookies.get('user_sites', '')
+                queryset = Post.objects.all()
+                query = Q(category=None)
+                for val, _ in CATS:
+                    if val in categories:
+                        query.add(Q(category=val), Q.OR)
+                queryset = queryset.filter(query)
+                query = Q(source__name=None)
+                for val, _ in SITES:
+                    if val in sites:
+                        query.add(Q(source__name=val), Q.OR)
+                queryset = queryset.filter(query)
             else:  # AnonymousUser, showing all results
-                queryset = Post.objects.all()  # TODO: exclude reddit
+                queryset = Post.objects.all()
         return queryset.order_by('-created')
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        if context.get('is_paginated'):
-            page_obj = context.get('page_obj')
-            if page_obj.has_previous():
-                context['prev_url'] = '?page={}'.format(page_obj.previous_page_number())
-            else:
-                context['prev_url'] = ''
-            if page_obj.has_next():
-                context['next_url'] = '?page={}'.format(page_obj.next_page_number())
-            else:
-                context['next_url'] = ''
         categories_string = self.request.COOKIES.get('user_categories', '')
         sites_string = self.request.COOKIES.get('user_sites', '')
         if categories_string or sites_string:
             context['form'] = PrefCatForm(data={'categories': listify(categories_string),
                                                 'sites': listify(sites_string)})
         else:  # if these cookies have not been set yet
-            context['form'] = PrefCatForm()  # TODO: correct data set
+            context['form'] = PrefCatForm(data={'categories': list(map(lambda c: c[0], CATS)),
+                                                'sites': list(map(lambda s: s[0], SITES))})
         return context
 
 
@@ -78,6 +64,16 @@ def userform_submitting(request):
     response.set_cookie('user_categories', categories, max_age=2592000)
     response.set_cookie('user_sites', sites, max_age=2592000)
     return response
+
+
+def err(request, errcode):
+    '''For testing custom error pages'''
+    if errcode == '500':
+        return render(request, '500.html')
+    elif errcode == '404':
+        return render(request, '404.html')
+    else:
+        return HttpResponseRedirect(redirect_to=reverse('news:mainpage'))
 
 
 # @login_required

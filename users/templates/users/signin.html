@@ -1,0 +1,26 @@
+{% extends "users/userbase.html" %}
+{% load static %}
+
+{% block content %}
+{% if form.errors %}
+    <p>Your username and password didn't match. Please try again.</p>
+{% endif %}
+
+<form class="form-signin" action="{% url 'users:login' %}" method='post'>
+    <img class="mb-4" src="{% static 'images/loginpic.jpg' %}" alt="Python pic" width="85" height="75">
+    <h1 class="h3 mb-3 font-weight-normal">Please, sign in</h1>
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
+    <input type="hidden" name="next" value="{% url 'news:mainpage' %}" />
+  <p class="mt-5 mb-3 text-muted">&copy; 2020</p>
+</form>
+
+<div class="row">
+    <div class="col-sm-4"></div>
+    <div class="col-sm-4">
+        <p>No account yet? <a href="{% url 'users:register' %}">Register one quick</a></p>
+    </div>
+    <div class="col-sm-4"></div>
+</div>
+{% endblock content %}

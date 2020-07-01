@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Site, Post, BadCodeEvent, ExceptionEvent
+from .models import Site, Post, BadCodeEvent, ExceptionEvent, Pic
 
 
 @admin.register(Site)
@@ -18,5 +18,10 @@ class BadCodeEventModelAdmin(admin.ModelAdmin):
 
 
 @admin.register(ExceptionEvent)
+class ExceptionEventModelAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Pic)
 class ExceptionEventModelAdmin(admin.ModelAdmin):
     pass

@@ -1,47 +1,140 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="h-100">
 {% load static %}
 
 <head>
     <meta charset="UTF-8">
-    <!--<link rel="stylesheet" type="text/css" href="{% static 'styles_test.css' %}">-->
-    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap-grid.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap-min.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap-reboot.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'css/bootstrap.css' %}">
-    <script src="{% static 'jquery.min.js' %}"></script>
-    <style>
-        body {
-            background-color: azure;
-            }
-        ul.errorlist {display:none;}
-    </style>
+     <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <meta name="description" content="Digests for python">
+    <meta name="author" content="NL">
 
+    <!-- Core CSS -->
+    <link href="{% static 'css/bootstrap.min.css' %}" rel="stylesheet">
+
+        <!-- Favicons -->
+    <link rel="icon" href="{% static 'images/sitelogo2.jpg' %}" sizes="32x32" type="image/png">
+    <meta name="msapplication-config" content="https://getbootstrap.com/docs/4.4/assets/img/favicons/browserconfig.xml">
+    <meta name="theme-color" content="#563d7c">
+    <link href="{% static 'css/checkbox_style.css' %}" rel="stylesheet">
+<!--    <script src="{% static 'jquery.min.js' %}"></script>-->
+
+    <style>
+        ul.errorlist {display:none;}
+        p.hellotext {color: white;}
+        p.darker {color: black;}
+
+        .bg-pydark {
+        background-color: #4b8bbe;
+        }
+
+        .bg-pylight {
+        background-color: #ffd43b;
+        }
+
+        .btn-outline-custom-signin {
+        color: #4b8bbe;
+        border-color: #4b8bbe;
+        }
+
+        .margined {
+         margin-right: 5px;
+         margin-left: 1px;
+        }
+
+      .bd-placeholder-img {
+        font-size: 1.125rem;
+        text-anchor: middle;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+
+      @media (min-width: 768px) {
+        .bd-placeholder-img-lg {
+          font-size: 3.5rem;
+        }
+        {% comment  %}
+            custom .navbar-center is needed for sidebar alignment
+        {% endcomment %}
+        .navbar-center {
+        position: absolute;
+        right: 10%;
+        top: 10%;
+        left: 0%;
+        transform: translatex(-0%);
+        }
+      }
+    </style>
+    <link href="https://getbootstrap.com/docs/4.0/examples/offcanvas/offcanvas.css" rel="stylesheet">
     <title>Python Aggregator</title>
 </head>
 
-<body>
+<body class="bg-light d-flex flex-column h-100">
+    <nav class="navbar navbar-expand-lg fixed-top navbar-dark bg-dark">
+  <button class="navbar-toggler p-0 border-0" type="button" data-toggle="offcanvas">
+    <span class="navbar-toggler-icon"></span>
+  </button>
 
+  <div class="navbar-collapse offcanvas-collapse" id="navbarsExampleDefault">
+    <ul class="navbar-nav mr-auto">
+      {% block header %} {% endblock header %}
+    </ul>
+      <ul class="navbar-nav px-3">
+      {% if not user.is_authenticated %}
+    <li class="nav-item"><a class="btn btn-outline-primary" href="{% url 'users:login' %}">Sign up</a></li>
+      {% else %}
+      <li class="nav-item"><a class="nav-link" href="#">Hello, {{user}}!</a></li>
+      <li class="nav-item"><a class="btn btn-secondary" href="{% url 'users:logout' %}">Log out</a></li>
+      {% endif %}
+      </ul>
+  </div>
+    </nav>
     <div class="container">
-        <div class = "row">
-            <div class="col-md-12">
-                <div class="page-header">
-                    {% block header %}
-                    {% endblock header %}
-                </div>
-            </div>
+    <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-pylight rounded shadow-sm">
+    </div>
 
+
+    <div class="d-flex align-items-center p-3 my-3 text-white-50 bg-pydark rounded shadow-sm">
+        <img class="mr-3" src="/images/pymainlogo_white.png" alt="" width="48" height="48">
+        <div class="lh-100">
+        <h6 class="mb-0 text-white lh-100">Python Digest Aggregator</h6>
+        <small>2020</small>
         </div>
-        <div class = "row">
-            <div class="col-md-12">
+    </div>
+
+<div class="row">
+<main role="main" class="col-md-9 ml-sm-auto col-lg-10 px-4">
+    <div class="my-3 p-3 bg-white rounded shadow-sm">
+    <h6 class="border-bottom border-gray pb-2 mb-0">{% if page_obj.number == 1 %}Recent updates{% else %}Pythonic news{% endif %}</h6>
                 {% block content %}
                 {% endblock content %}
-            </div>
-        </div>
+    </div>
+</main>
+    <nav class="col-md-2 d-none d-md-block bg-light sidebar">
+      <div class="sidebar-sticky navbar-center">
+          {% block side %}
+          {% endblock side %}
+      </div>
+    </nav>
+</div>
+</div>
+
+    <div class="container footer mt-auto py-3">
+        <footer  class="footer mt-auto py-3">
+            <center>
+                <p>Python digest by N.L.</p>
+                <p class="small">2020</p>
+                <p><a href="javascript:;" onclick="topFunction()">Back to Top</a></p>
+            </center>
+        </footer>
     </div>
 
     {% block scripts %}
     {% endblock scripts %}
-
+    <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js" integrity="sha384-J6qa4849blE2+poT4WnyKhv5vZF5SrPo0iEjwBvKU7imGFAV0wwj1yYfoRSJoZ+n" crossorigin="anonymous"></script>
+    <script>window.jQuery || document.write('<script src="/docs/4.4/assets/js/vendor/jquery.slim.min.js"><\/script>')</script><script src="https://getbootstrap.com/docs/4.4/dist/js/bootstrap.bundle.min.js" integrity="sha384-6khuMg9gaYr5AxOqhkVIODVIvm9ynTT5J4V1cfthmT+emCG6yVmEZsRHdxlotUnm" crossorigin="anonymous"></script>
+    <script src="https://getbootstrap.com/offcanvas.js"></script>
+    <script src="{% static 'js/scroller.js' %}"></script>
 </body>
 </html>

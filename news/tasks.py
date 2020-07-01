@@ -17,7 +17,7 @@ EVENT_LIFE = 14
 utc = pytz.UTC
 
 
-@periodic_task(run_every=timedelta(minutes=1), name='data_scrap')
+@periodic_task(run_every=timedelta(minutes=5), name='data_scrap')
 def data_scrap():
     """
     Procedure for data scrapping, uses interface provided by Site class from news.models
@@ -38,34 +38,35 @@ def clean_outdated():
     # old posts
     from .models import Post, BadCodeEvent, ExceptionEvent
     unwanted_posts = Post.objects.filter(
-        date_created__lt=utc.localize(datetime.datetime.today() - timedelta(days=POST_LIFE)))
-    print('DELETED: ', unwanted_posts)
+        created__lt=utc.localize(datetime.datetime.today() - timedelta(days=POST_LIFE)))
+    logger.info('POSTS DELETED: ', unwanted_posts)
     unwanted_posts.delete()
     # old code errors
     unwanted_code_events = BadCodeEvent.objects.filter(
-        date_created__lt=utc.localize(datetime.datetime.today() - timedelta(days=EVENT_LIFE)))
+        created__lt=utc.localize(datetime.datetime.today() - timedelta(days=EVENT_LIFE)))
     unwanted_code_events.delete()
     # old exception errors
     unwanted_exception_events = ExceptionEvent.objects.filter(
-        date_created__lt=utc.localize(datetime.datetime.today() - timedelta(days=EVENT_LIFE)))
+        created__lt=utc.localize(datetime.datetime.today() - timedelta(days=EVENT_LIFE)))
     unwanted_exception_events()
 
 
 @shared_task
-def email_task(event):
+def email_task(kwargs):
     '''Send notification info about errors to admins'''
+    print('Sending...')
     subject = "Aggregator: Error occured"
-    err_txt = event.__dict__.get('exc_text')
-    invalid_code = event.__dict__.get('resp_code')
+    err_txt = kwargs.get('exc_text')
+    invalid_code = kwargs.get('resp_code')
     if err_txt:
         start = f"Exception ({err_txt})"
     elif invalid_code:
         start = f"Bad response code ({invalid_code})"
     else:
         start = f"Unknown instance"
-    message = f"{start} occured on {event.resource}"
+    message = f"{start} occured on {kwargs.get('resource')}"
     # Sending:
-    print('gotta send')
+    logger.info('Sending email...')
     mail_admins(subject=subject,
                 message=message,
                 fail_silently=False)

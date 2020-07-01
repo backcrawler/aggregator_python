@@ -9,6 +9,7 @@ class DjangoConnectionThreadPoolExecutor(ThreadPoolExecutor):
     when applied inside Django. Function passed to the instance is wrapped with custom decorator so
     close_django_db_connection() must be called inside the thread when it's finished
     """
+
     def close_django_db_connection(self):
         connection.close()
 
