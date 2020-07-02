@@ -184,10 +184,10 @@ def realpython_parser(link):
         p = card.find('p')
         if p:
             for a_tag in p.findAll('a'):
-                if a_tag.text in web_dev_set:
+                if a_tag.text.lower() in web_dev_set:
                     cat = 'web_dev'
                     break
-                if a_tag.text in data_science_set:
+                if a_tag.text.lower() in data_science_set:
                     cat = 'data_science'
                     break
         posts.append({'title': h2.text, 'ref': urljoin(base, a['href']), 'category': cat})

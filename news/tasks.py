@@ -9,6 +9,7 @@ import datetime
 from datetime import timedelta
 
 from .concurrent_executors import DjangoConnectionThreadPoolExecutor
+from aggregator_python.celery import app
 
 logger = get_task_logger(__name__)
 
@@ -17,7 +18,7 @@ EVENT_LIFE = 14
 utc = pytz.UTC
 
 
-@periodic_task(run_every=timedelta(minutes=5), name='data_scrap')
+#@periodic_task(run_every=timedelta(minutes=5), name='data_scrap')
 def data_scrap():
     """
     Procedure for data scrapping, uses interface provided by Site class from news.models
@@ -30,7 +31,7 @@ def data_scrap():
         executor.map(lambda s: s.work_on_resource(), sites)
 
 
-@periodic_task(run_every=timedelta(days=1), name='db_clean')
+#@periodic_task(run_every=timedelta(days=1), name='db_clean')
 def clean_outdated():
     """
     Cleans outdated posts and events objects
@@ -51,10 +52,9 @@ def clean_outdated():
     unwanted_exception_events()
 
 
-@shared_task
-def email_task(kwargs):
+@app.task(bind=True)
+def email_task(self, **kwargs):
     '''Send notification info about errors to admins'''
-    print('Sending...')
     subject = "Aggregator: Error occured"
     err_txt = kwargs.get('exc_text')
     invalid_code = kwargs.get('resp_code')
@@ -70,3 +70,10 @@ def email_task(kwargs):
     mail_admins(subject=subject,
                 message=message,
                 fail_silently=False)
+
+
+# @shared_task
+# def adding_task(x, y):
+#     print('Executing summ')
+#     print('Sum equals:', x+y)
+#     return x+y

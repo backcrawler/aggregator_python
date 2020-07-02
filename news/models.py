@@ -1,5 +1,4 @@
 from django.db import models
-from django.core.mail import mail_admins, send_mail
 
 from .utils import ResponceCodeError
 from .managers import ActiveManager
@@ -8,6 +7,7 @@ import sys
 import importlib
 import traceback
 from urllib.parse import urlparse
+from datetime import date
 
 DEFAULT_PIC_ID = 1
 
@@ -29,27 +29,14 @@ class BadEvent(models.Model):
 
     def notify_admins(self):
         '''Send notification info about errors to admins'''
-        subject = "Aggregator: Error occured"
-        err_txt = self.__dict__.get('exc_text')
-        invalid_code = self.__dict__.get('resp_code')
-        if err_txt:
-            start = f"Exception ({err_txt})"
-        elif invalid_code:
-            start = f"Bad response code ({invalid_code})"
-        else:
-            start = f"Unknown instance"
-        message = f"{start} occured on {self.resource} at {self.date_occured}."
-        # Sending:
-        print('gotta send')
-        mail_admins(subject=subject,
-                    message=message,
-                    fail_silently=False)
+        from .tasks import email_task
+        exc_text = self.__dict__.get('exc_text')
+        resp_code = self.__dict__.get('resp_code')
+        email_task(exc_text=exc_text, resp_code=resp_code, resource=self.resource)
 
     def save(self, *args, **kwargs):
-        today_qs = self.__class__.objects.filter(date_occured=self.date_occured, resource=self.resource)
-        print(today_qs)
+        today_qs = self.__class__.objects.filter(date_occured=date.today(), resource=self.resource)
         if not today_qs.exists():  # if such error didn't occur for today, send info in email
-            print('sending email...')
             self.notify_admins()
         super().save(*args, **kwargs)
 
