@@ -2,10 +2,7 @@
 /keys.json
 /props.txt
 /news/metafile.txt
-/users/static/images
-/static/images/
-/news/static/images/
-/static/
 /news/templates/news/ul_li_versions.html
-/users/static/images/
 /celerybeat-schedule.db
+/static/images_to_upload/
+/static/images/
