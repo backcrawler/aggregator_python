@@ -5,4 +5,5 @@
 /news/templates/news/ul_li_versions.html
 /celerybeat-schedule.db
 /static/images_to_upload/
-/static/images/
+/news/static/images/
+/static/
