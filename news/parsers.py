@@ -205,6 +205,8 @@ def medium_parser(link):
         h3 = article.find('h3', {'class': 'graf'})
         readmore = article.find('div', {'class': 'postArticle-readMore'})
         a = readmore.find('a')
+        parsed = urlparse(a['href'])
+        correct_ref = urlunparse((parsed.scheme, parsed.netloc, parsed.path, '', '', ''))
         cat = None
         for tag in web_dev_set:
             if tag in h3.text.lower():
@@ -215,7 +217,7 @@ def medium_parser(link):
                 if tag in h3.text.lower():
                     cat = 'data_science'
                     break
-        posts.append({'title': h3.text, 'ref': a['href'], 'category': cat})
+        posts.append({'title': h3.text, 'ref': correct_ref, 'category': cat})
     if len(posts) > 20:
         posts = posts[:20]
     return posts

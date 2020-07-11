@@ -7,7 +7,7 @@
 {% endif %}
 
 <form class="form-signin" action="{% url 'users:login' %}" method='post'>
-    <img class="mb-4" src="{% static 'images/loginpic.jpg' %}" alt="Python pic" width="85" height="75">
+    <img class="mb-4" src="/images/loginpic.jpg" alt="Python pic" width="85" height="75">
     <h1 class="h3 mb-3 font-weight-normal">Please, sign in</h1>
     {% csrf_token %}
     {{ form.as_p }}
