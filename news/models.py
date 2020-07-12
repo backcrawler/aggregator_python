@@ -77,14 +77,19 @@ class Post(models.Model):
         ordering = ('-created', 'ref')
 
     def __str__(self):
-        return f'Post(ref: {self.ref}, id:{self.id})'
+        return f'Post(title: {self.title}, id: {self.id})'
 
 
 class Site(models.Model):
     '''Represent a "root"-resource where initial data is leached from; handles data fetching in methods'''
+    languages = (
+        ('eng', 'Eng'),
+        ('rus', 'Rus'),
+    )
     name = models.CharField(max_length=128, unique=True)
     ref = models.CharField(max_length=128)
     img = models.ForeignKey(to='Pic', on_delete=models.CASCADE, null=True, blank=True)
+    lang = models.CharField(choices=languages, max_length=4, default='eng')
     active = models.BooleanField(default=True)
 
     objects = ActiveManager()
@@ -114,7 +119,7 @@ class Site(models.Model):
                 post.save()
 
     def __str__(self):
-        return f'Site(name: {self.name}, id:{self.id})'
+        return f'Site(name: {self.name}, id: {self.id})'
 
 
 class Pic(models.Model):

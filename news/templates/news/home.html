@@ -1,4 +1,5 @@
 {% extends "news/base.html" %}
+{% load static %}
 
 {% block header %}
     <li class="nav-item">
@@ -74,38 +75,51 @@
 {% endblock content %}
 
 {% block side %}
-    {% if user.is_authenticated %}
-    <form action="{% url 'news:userpost' %}" method='post'>
+
+    <form id="userpost-form" action="{% url 'news:userpost' %}" method='post'>
         {% csrf_token %}
         <div class="card justify-content-center">
             <div class="col-auto my-1">
+<!--                <select id="id_period" class="form-control auto-margined" name="period">-->
+<!--                    <option value="all_time">All Time</option>-->
+<!--                    <option value="3days">3 days</option>-->
+<!--                    <option value="7days">7 days</option>-->
+<!--                    <option value="1month">last month</option>-->
+<!--                </select>-->
+<!--                <p></p>-->
                 {% for field in form %}
-                {{ field.label_tag }}
-                {% for x in field %}
-                <div class="custom-control custom-checkbox mr-sm-2">
-                <input id={{x.id_for_label}} name={{x.data.name}} value={{x.data.value}}
-                       type="checkbox" class="custom-control-input" {% if x.data.selected %} checked {% endif %}>
-                <label class="custom-control-label" for={{x.id_for_label}}>{{x.data.label}}</label>
-                </div>
-                {% endfor %}
-                <p></p>
+                {% if field.label == 'Period'  %}
+                    {{ field.label_tag }}
+                    {{field}}
+                    <p></p>
+                {% else %}
+                    {{ field.label_tag }}
+                    {% for x in field %}
+                    <div class="custom-control custom-checkbox mr-sm-2">
+                    <input id={{x.id_for_label}} name={{x.data.name}} value={{x.data.value}}
+                           type="checkbox" class="custom-control-input" {% if x.data.selected %} checked {% endif %}>
+                    <label class="custom-control-label" for={{x.id_for_label}}>{{x.data.label}}</label>
+                    </div>
+                    {% endfor %}
+                    <p></p>
+                {% endif %}
                 {% endfor %}
             </div>
-
         <div class="row">
-        <div class="col-sm-4"></div>
-            <div class="col-sm-4">
-        <button name="submit"><svg class="bi bi-archive" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
+        <button name="submit" class="btn btn-outline-primary auto-margined"><svg class="bi bi-archive" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg">
           <path fill-rule="evenodd" d="M2 5v7.5c0 .864.642 1.5 1.357 1.5h9.286c.715 0 1.357-.636 1.357-1.5V5h1v7.5c0 1.345-1.021 2.5-2.357 2.5H3.357C2.021 15 1 13.845 1 12.5V5h1z"/>
           <path fill-rule="evenodd" d="M5.5 7.5A.5.5 0 0 1 6 7h4a.5.5 0 0 1 0 1H6a.5.5 0 0 1-.5-.5zM15 2H1v2h14V2zM1 1a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H1z"/>
         </svg></button>
         </div>
-            </div>
-        <div class="col-sm-4"></div>
+            <div class="row"><a class="btn btn-outline-primary all-select" href="javascript:;" onclick="selectEverything(true)">select all</a> </div>
+            <div class="row"><a class="btn btn-outline-primary all-select" href="javascript:;" onclick="selectEverything(false)">unselect all</a> </div>
         </div>
     </form>
-    {% endif %}
+
 
 {% endblock side %}
 
+{% block scripts %}
+    <script src="{% static 'js/selecter.js' %}"></script>
+{% endblock scripts %}
 
