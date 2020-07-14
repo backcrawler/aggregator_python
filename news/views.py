@@ -20,44 +20,54 @@ class PostListView(ListView):
     cat = None
 
     def get_queryset(self):
+        if self.request.user.is_authenticated:  # if logged in, fetching data according to profile attrs
+            self.set_prefs_auth()
+        else:  # AnonymousUser, fetching data according to cookies
+            self.set_prefs_anon()
         if self.cat is not None:  # if self.cat is provided, showing all result for it
             queryset = Post.objects.filter(category=self.cat)
         else:
-            cookies = self.request.COOKIES
-            period = cookies.get('user_period', '')
-            categories = cookies.get('user_categories', '')
-            sites = cookies.get('user_sites', '')
             queryset = Post.objects.all()
-            if categories or sites:
+            if self.categories or self.sites:
                 query = Q(category=None)
                 for val, _ in CATS:
-                    if val in categories:
+                    if val in self.categories:
                         query.add(Q(category=val), Q.OR)
                 queryset = queryset.filter(query)
                 query = Q(source__name=None)
                 for val, _ in SITES:
-                    if val in sites:
+                    if val in self.sites:
                         query.add(Q(source__name=val), Q.OR)
                 queryset = queryset.filter(query)
-            if period:
+            if self.period:
                 today = datetime.today()
-                if period == '3days':
+                if self.period == '3days':
                     queryset = queryset.filter(created__gte=today - timedelta(days=3))
-                elif period == '7days':
+                elif self.period == '7days':
                     queryset = queryset.filter(created__gte=today - timedelta(days=7))
-                elif period == '1month':
+                elif self.period == '1month':
                     queryset = queryset.filter(created__gte=today - timedelta(days=30))
         return queryset.order_by('-created')
 
+    def set_prefs_auth(self):
+        profile = self.request.user.profile
+        self.period = str(profile.attrs.get('user_period', ''))
+        self.categories = str(profile.attrs.get('user_categories', ''))
+        self.sites = str(profile.attrs.get('user_sites', ''))
+
+    def set_prefs_anon(self):
+        cookies = self.request.COOKIES
+        self.period = cookies.get('user_period', '')
+        self.categories = cookies.get('user_categories', '')
+        self.sites = cookies.get('user_sites', '')
+        print(self.period, self.categories, self.sites)
+
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
-        period_string = self.request.COOKIES.get('user_period', 'all_time')
-        categories_string = self.request.COOKIES.get('user_categories', '')
-        sites_string = self.request.COOKIES.get('user_sites', '')
-        if categories_string or sites_string:
-            context['form'] = PrefCatForm(data={'categories': listify(categories_string),
-                                                'sites': listify(sites_string),
-                                                'period': period_string})
+        if self.categories or self.sites:
+            context['form'] = PrefCatForm(data={'categories': listify(self.categories),
+                                                'sites': listify(self.sites),
+                                                'period': self.period})
         else:  # if these cookies have not been set yet
             context['form'] = PrefCatForm(data={'categories': list(map(lambda c: c[0], CATS)),
                                                 'sites': list(map(lambda s: s[0], SITES)),
@@ -73,9 +83,16 @@ def userform_submitting(request):
     period = request.POST.get('period')
     categories = request.POST.getlist('categories')
     sites = request.POST.getlist('sites')
-    response.set_cookie('user_period', period, max_age=2592000)
-    response.set_cookie('user_categories', categories, max_age=2592000)
-    response.set_cookie('user_sites', sites, max_age=2592000)
+    if request.user.is_authenticated:  # working with Profile
+        profile = request.user.profile
+        profile.attrs['user_period'] = period
+        profile.attrs['user_categories'] = categories
+        profile.attrs['user_sites'] = sites
+        profile.save()
+    else:  # working with cookies
+        response.set_cookie('user_period', period, max_age=2592000)
+        response.set_cookie('user_categories', categories, max_age=2592000)
+        response.set_cookie('user_sites', sites, max_age=2592000)
     return response
 
 

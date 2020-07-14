@@ -14,7 +14,7 @@
 {% endif %}
 
 <form class="form-signin" action="{% url 'users:register' %}" method='post'>
-    <img class="mb-4" src="images/regpic.svg'" alt="Python pic" width="75" height="75">
+    <img class="mb-4" src="/images/regpic.svg'" alt="Python pic" width="75" height="75">
   <h1 class="h3 mb-3 font-weight-normal">Please, register</h1>
 
     {% csrf_token %}

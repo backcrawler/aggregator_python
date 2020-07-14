@@ -1,4 +1,4 @@
-from .celery import app
+from .celeryapp import app
 
 __all__ = ('app',)
 

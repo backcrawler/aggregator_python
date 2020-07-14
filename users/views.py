@@ -20,3 +20,10 @@ def register(request):
             return HttpResponseRedirect(reverse('news:mainpage'))
     context = {'form': form}
     return render(request, 'users/register.html', context)
+
+
+# for u in User.objects.all():
+#     try:
+#         u.profile
+#     except User.profile.RelatedObjectDoesNotExist:
+#         Profile.objects.create(user=u)

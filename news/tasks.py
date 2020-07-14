@@ -9,7 +9,7 @@ import datetime
 from datetime import timedelta
 
 from .concurrent_executors import DjangoConnectionThreadPoolExecutor
-from aggregator_python.celery import app
+from aggregator_python.celeryapp import app
 
 logger = get_task_logger(__name__)
 

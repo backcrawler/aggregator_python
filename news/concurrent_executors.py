@@ -27,9 +27,6 @@ class DjangoConnectionThreadPoolExecutor(ThreadPoolExecutor):
         return new_func
 
     def submit(*args, **kwargs):
-        """The args filtering/unpacking logic is from
-        https://github.com/python/cpython/blob/3.7/Lib/concurrent/futures/thread.py
-        """
         if len(args) >= 2:
             self, fn, *args = args
             fn = self.generate_thread_closing_wrapper(fn=fn)

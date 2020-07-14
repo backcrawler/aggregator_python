@@ -6,7 +6,7 @@
     <p>Your username and password didn't match. Please try again.</p>
 {% endif %}
 
-<form class="form-signin" action="{% url 'users:login' %}" method='post'>
+<form class="form-signin" action="{% url 'users:login' %}" method='post' style="vertical-align:middle">
     <img class="mb-4" src="/images/loginpic.jpg" alt="Python pic" width="85" height="75">
     <h1 class="h3 mb-3 font-weight-normal">Please, sign in</h1>
     {% csrf_token %}
