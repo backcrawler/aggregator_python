@@ -1,4 +1,6 @@
 from django.shortcuts import Http404, HttpResponseRedirect, reverse, render
+from django.urls import reverse_lazy
+from django.views.generic import RedirectView
 from django.views.generic.list import ListView
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q
@@ -6,8 +8,17 @@ from django.db.models import Q
 from .models import Post
 from .forms import PrefCatForm, CATS, SITES, PERIODS
 from .utils import listify
+from .states import AuthHandler, AnonHandler
 
 from datetime import datetime, timedelta
+from collections import defaultdict
+
+# for switch-case in period filtering inside PostListView
+_periods_usual_dict = {'all_time': lambda qs: qs,  # qs - given queryset
+                       '3days': lambda qs: qs.filter(created__gte=self.today - timedelta(days=3)),  # no error here
+                       '7days': lambda qs: qs.filter(created__gte=self.today - timedelta(days=7)),
+                       '1month': lambda qs: qs.filter(created__gte=self.today - timedelta(days=30)),
+                       }
 
 
 class PostListView(ListView):
@@ -18,12 +29,15 @@ class PostListView(ListView):
     allow_empty = True
     paginate_by = 15
     cat = None
+    handler = None
+    periods_dict = defaultdict(lambda: lambda qs: qs, _periods_usual_dict)  # lambda returns another lambda...
 
     def get_queryset(self):
         if self.request.user.is_authenticated:  # if logged in, fetching data according to profile attrs
-            self.set_prefs_auth()
+            self.handler = AuthHandler(self)
         else:  # AnonymousUser, fetching data according to cookies
-            self.set_prefs_anon()
+            self.handler = AnonHandler(self)
+        self.handler.set_prefs()
         if self.cat is not None:  # if self.cat is provided, showing all result for it
             queryset = Post.objects.filter(category=self.cat)
         else:
@@ -40,27 +54,9 @@ class PostListView(ListView):
                         query.add(Q(source__name=val), Q.OR)
                 queryset = queryset.filter(query)
             if self.period:
-                today = datetime.today()
-                if self.period == '3days':
-                    queryset = queryset.filter(created__gte=today - timedelta(days=3))
-                elif self.period == '7days':
-                    queryset = queryset.filter(created__gte=today - timedelta(days=7))
-                elif self.period == '1month':
-                    queryset = queryset.filter(created__gte=today - timedelta(days=30))
+                self.today = datetime.today()
+                queryset = self.periods_dict[self.period](queryset)
         return queryset.order_by('-created')
-
-    def set_prefs_auth(self):
-        profile = self.request.user.profile
-        self.period = str(profile.attrs.get('user_period', ''))
-        self.categories = str(profile.attrs.get('user_categories', ''))
-        self.sites = str(profile.attrs.get('user_sites', ''))
-
-    def set_prefs_anon(self):
-        cookies = self.request.COOKIES
-        self.period = cookies.get('user_period', '')
-        self.categories = cookies.get('user_categories', '')
-        self.sites = cookies.get('user_sites', '')
-        print(self.period, self.categories, self.sites)
 
     def get_context_data(self, *args, **kwargs):
         context = super().get_context_data(*args, **kwargs)
@@ -75,25 +71,24 @@ class PostListView(ListView):
         return context
 
 
-def userform_submitting(request):
-    '''For POST-requests from the front, sets required cookies'''
-    if request.method != 'POST':
-        return Http404
-    response = HttpResponseRedirect(redirect_to=reverse('news:mainpage'))
-    period = request.POST.get('period')
-    categories = request.POST.getlist('categories')
-    sites = request.POST.getlist('sites')
-    if request.user.is_authenticated:  # working with Profile
-        profile = request.user.profile
-        profile.attrs['user_period'] = period
-        profile.attrs['user_categories'] = categories
-        profile.attrs['user_sites'] = sites
-        profile.save()
-    else:  # working with cookies
-        response.set_cookie('user_period', period, max_age=2592000)
-        response.set_cookie('user_categories', categories, max_age=2592000)
-        response.set_cookie('user_sites', sites, max_age=2592000)
-    return response
+class UserformProcessing(RedirectView):
+    url = reverse_lazy('news:mainpage')
+    handler = None
+
+    def setup(self, request, *args, **kwargs):
+        super().setup(request, *args, **kwargs)
+        if self.request.user.is_authenticated:
+            self.handler = AuthHandler(self)
+        else:
+            self.handler = AnonHandler(self)
+        self.response = HttpResponseRedirect(redirect_to=self.get_redirect_url(*args, **kwargs))
+
+    def get(self, request, *args, **kwargs):
+        return self.response
+
+    def post(self, request, *args, **kwargs):
+        self.handler.form_process()
+        return self.get(request, *args, **kwargs)
 
 
 def err(request, errcode):
@@ -106,20 +101,22 @@ def err(request, errcode):
         return HttpResponseRedirect(redirect_to=reverse('news:mainpage'))
 
 
-# @login_required
-# def ajax_userform_submitting(request):
-#     print('COOKIES_RECEIVED:', request.COOKIES)
+# def userform_submitting(request):
+#     '''For POST-requests from the front, sets required cookies'''
 #     if request.method != 'POST':
 #         return Http404
-#     response = HttpResponse()
-#     print('POST:', request.POST)
+#     response = HttpResponseRedirect(redirect_to=reverse('news:mainpage'))
+#     period = request.POST.get('period')
 #     categories = request.POST.getlist('categories')
-#     print('CATEGORIES:', categories)
-#     # pol = ('pol', True if 'Politics' in categories else False)
-#     # eco = ('eco', True if 'Economy' in categories else False)
-#     # sport = ('sport', True if 'Sports' in categories else False)
-#     # values_to_set = [pol, eco, sport]
-#     # print('values_to_set:', values_to_set)
-#     response.set_cookie('user_categories', categories, max_age=2592000)
-#     print('COOKIES_MODIFIED:', request.COOKIES)
-#     return HttpResponse(json.dumps({}), content_type="application/json")
+#     sites = request.POST.getlist('sites')
+#     if request.user.is_authenticated:  # working with Profile
+#         profile = request.user.profile
+#         profile.attrs['user_period'] = period
+#         profile.attrs['user_categories'] = categories
+#         profile.attrs['user_sites'] = sites
+#         profile.save()
+#     else:  # working with cookies
+#         response.set_cookie('user_period', period, max_age=2592000)
+#         response.set_cookie('user_categories', categories, max_age=2592000)
+#         response.set_cookie('user_sites', sites, max_age=2592000)
+#     return response
